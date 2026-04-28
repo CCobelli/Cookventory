@@ -1,0 +1,250 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #17263a;
+  background:
+    radial-gradient(circle at top left, rgba(80, 127, 255, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(32, 147, 112, 0.1), transparent 22%),
+    linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.usability-page {
+  padding: 32px 16px 56px;
+}
+
+.usability-shell {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.usability-hero,
+.usability-card,
+.usability-message {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d7e1ef;
+  border-radius: 24px;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.usability-hero,
+.usability-card,
+.usability-message {
+  padding: 24px;
+}
+
+.usability-hero {
+  margin-bottom: 24px;
+}
+
+.usability-eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4c73d6;
+}
+
+.usability-hero h1,
+.usability-card h2,
+.usability-message h2 {
+  margin: 0 0 10px;
+}
+
+.usability-hero p,
+.usability-card p,
+.usability-message p {
+  margin: 0;
+  color: #5b6d84;
+  line-height: 1.6;
+}
+
+.usability-form {
+  display: grid;
+  gap: 20px;
+}
+
+.usability-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.usability-field {
+  display: grid;
+  gap: 8px;
+}
+
+.usability-field span,
+.usability-rating legend {
+  font-weight: 700;
+}
+
+.usability-field input,
+.usability-field textarea {
+  width: 100%;
+  border: 1px solid #cad8ea;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #f9fbff;
+  color: #17263a;
+  font: inherit;
+}
+
+.usability-field input:focus,
+.usability-field textarea:focus {
+  outline: 2px solid rgba(76, 115, 214, 0.18);
+  border-color: #7ca0f5;
+}
+
+.usability-section-copy {
+  margin-bottom: 16px !important;
+}
+
+.usability-rating {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.usability-rating:last-child {
+  margin-bottom: 0;
+}
+
+.usability-rating-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+
+.usability-rating-options label {
+  position: relative;
+}
+
+.usability-rating-options input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.usability-rating-options span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid #c7d6ec;
+  background: #f6f9ff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.usability-rating-options input:checked + span,
+.usability-rating-options span:hover {
+  background: #e7efff;
+  border-color: #7f9ff0;
+  transform: translateY(-1px);
+}
+
+.usability-rating-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: #647892;
+}
+
+.usability-message {
+  margin-bottom: 20px;
+}
+
+.usability-message--success {
+  border-color: #b8dfd0;
+  background: rgba(239, 252, 246, 0.94);
+}
+
+.usability-message--error {
+  border-color: #e5c3c0;
+  background: rgba(255, 243, 242, 0.95);
+}
+
+.usability-message ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #7b3f3f;
+}
+
+.usability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.usability-actions button,
+.usability-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid #c7d6ec;
+  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+  color: #173156;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.08);
+}
+
+.usability-actions button:hover,
+.usability-actions a:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .usability-hero,
+  .usability-card,
+  .usability-message {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .usability-rating-scale {
+    flex-direction: column;
+  }
+
+  .usability-actions > * {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .usability-page {
+    padding: 20px 10px 34px;
+  }
+
+  .usability-hero,
+  .usability-card,
+  .usability-message {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .usability-rating-options {
+    gap: 8px;
+  }
+
+  .usability-rating-options span {
+    width: 42px;
+    height: 42px;
+  }
+}

@@ -1,21 +1,3 @@
-# Environment / credentials
 .env
-*.env
-private/db-connect.php
-
-# OS files
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Dependencies
-vendor/
-node_modules/
-
-# Logs
-*.log

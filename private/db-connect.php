@@ -1,24 +1,60 @@
 <?php
-// Load environment variables from .env file
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+function loadEnvFile(string $path): void
+{
+    if (!file_exists($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
+
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        if (strpos($line, '=') === false) continue;
-        list($key, $value) = explode('=', $line, 2);
-        $_ENV[trim($key)] = trim($value);
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
+            continue;
+        }
+
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+
+        if ($key === '') {
+            continue;
+        }
+
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
     }
 }
 
-$servername = $_ENV['DB_HOST'] ?? 'localhost';
-$username   = $_ENV['DB_USERNAME'] ?? '';
-$password   = $_ENV['DB_PASSWORD'] ?? '';
-$dbname     = $_ENV['DB_NAME'] ?? 'cookventory';
+function envValue(string $key, string $default = ''): string
+{
+    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+    if ($value === false || $value === null || $value === '') {
+        return $default;
+    }
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    return (string)$value;
 }
-?>
+
+loadEnvFile(__DIR__ . '/../.env');
+
+$host = envValue('DB_HOST', 'localhost');
+$dbname = envValue('DB_NAME', 'cookventory');
+$username = envValue('DB_USERNAME', '');
+$password = envValue('DB_PASSWORD', '');
+
+try {
+    $pdo = new PDO(
+        "mysql:host={$host};dbname={$dbname};charset=utf8mb4",
+        $username,
+        $password
+    );
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die('Database connection failed: ' . $e->getMessage());
+}
