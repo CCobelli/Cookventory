@@ -32,6 +32,14 @@ $cuisineCategoryMap = array_fill_keys($cuisineCategoryIds, true);
 
 $errors = [];
 
+function queueRecipeFlash(string $message, string $type = 'success'): void
+{
+    $_SESSION['recipe_flash'] = [
+        'message' => $message,
+        'type' => $type,
+    ];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $desc = trim($_POST['description'] ?? '');
@@ -61,6 +69,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
+            $ingredientRows = [];
+            $count = count($ingNames);
+            for ($i = 0; $i < $count; $i++) {
+                $typedName = isset($ingNames[$i]) ? trim((string)$ingNames[$i]) : '';
+                $pickedId = (isset($ingIds[$i]) && ctype_digit((string)$ingIds[$i])) ? (int)$ingIds[$i] : 0;
+                $qty = isset($qtys[$i]) ? trim((string)$qtys[$i]) : '';
+                $unitId = (isset($unitIds[$i]) && ctype_digit((string)$unitIds[$i])) ? (int)$unitIds[$i] : 0;
+
+                if ($typedName === '' || $qty === '' || $unitId <= 0) {
+                    continue;
+                }
+
+                $finalIngId = $pickedId > 0 ? $pickedId : resolveIngredientId($pdo, $typedName);
+                if ($finalIngId <= 0) {
+                    continue;
+                }
+
+                $ingredientRows[] = [
+                    'ingredient_id' => $finalIngId,
+                    'quantity' => $qty,
+                    'unit_id' => $unitId,
+                ];
+            }
+
+            $stepRows = [];
+            $stepNum = 1;
+            foreach ($steps as $s) {
+                $s = trim((string)$s);
+                if ($s === '') {
+                    continue;
+                }
+
+                $stepRows[] = [
+                    'step_number' => $stepNum,
+                    'instruction' => $s,
+                ];
+                $stepNum++;
+            }
+
+            $categoryIds = [];
+            foreach ($cats as $catId) {
+                if (!ctype_digit((string)$catId)) {
+                    continue;
+                }
+                $catId = (int)$catId;
+                if ($customCuisine !== '' && isset($cuisineCategoryMap[$catId])) {
+                    continue;
+                }
+                $categoryIds[$catId] = true;
+            }
+
+            $customCuisineCatId = 0;
+            if ($customCuisine !== '') {
+                $customCuisineCatId = resolveCuisineCategoryId($pdo, $customCuisine);
+            }
+
             $pdo->beginTransaction();
 
             if ($hasServingsColumn) {
@@ -96,65 +160,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $recipe_id = (int)$pdo->lastInsertId();
 
-            $count = count($ingNames);
-            for ($i = 0; $i < $count; $i++) {
-                $typedName = isset($ingNames[$i]) ? trim((string)$ingNames[$i]) : '';
-                $pickedId = (isset($ingIds[$i]) && ctype_digit((string)$ingIds[$i])) ? (int)$ingIds[$i] : 0;
-                $qty = isset($qtys[$i]) ? trim((string)$qtys[$i]) : '';
-                $unitId = (isset($unitIds[$i]) && ctype_digit((string)$unitIds[$i])) ? (int)$unitIds[$i] : 0;
-
-                if ($typedName === '' || $qty === '' || $unitId <= 0) continue;
-
-                $finalIngId = $pickedId > 0 ? $pickedId : resolveIngredientId($pdo, $typedName);
-                if ($finalIngId <= 0) continue;
-
+            foreach ($ingredientRows as $ingredientRow) {
                 $stmt = $pdo->prepare("
                     INSERT INTO recipe_ingredient_rcping
                     (id_rcp_rcping, id_ing_rcping, quantity_rcping, id_uni_rcping)
                     VALUES (?, ?, ?, ?)
                 ");
-                $stmt->execute([$recipe_id, $finalIngId, $qty, $unitId]);
+                $stmt->execute([
+                    $recipe_id,
+                    (int)$ingredientRow['ingredient_id'],
+                    $ingredientRow['quantity'],
+                    (int)$ingredientRow['unit_id'],
+                ]);
             }
 
-            $stepNum = 1;
-            foreach ($steps as $s) {
-                $s = trim((string)$s);
-                if ($s === '') continue;
-
+            foreach ($stepRows as $stepRow) {
                 $stmt = $pdo->prepare("
                     INSERT INTO recipe_step_stp
                     (id_rcp_stp, step_number_stp, instruction_stp)
                     VALUES (?, ?, ?)
                 ");
-                $stmt->execute([$recipe_id, $stepNum, $s]);
-                $stepNum++;
+                $stmt->execute([
+                    $recipe_id,
+                    (int)$stepRow['step_number'],
+                    $stepRow['instruction'],
+                ]);
             }
 
-            foreach ($cats as $catId) {
-                if (!ctype_digit((string)$catId)) continue;
-                if ($customCuisine !== '' && isset($cuisineCategoryMap[(int)$catId])) continue;
-                $stmt = $pdo->prepare("INSERT INTO recipe_category_rcpcat (id_rcp_rcpcat, id_cat_rcpcat) VALUES (?, ?)");
-                $stmt->execute([$recipe_id, (int)$catId]);
+            foreach (array_keys($categoryIds) as $catId) {
+                $stmt = $pdo->prepare("
+                    INSERT IGNORE INTO recipe_category_rcpcat (id_rcp_rcpcat, id_cat_rcpcat)
+                    VALUES (?, ?)
+                ");
+                $stmt->execute([$recipe_id, $catId]);
             }
 
-            if ($customCuisine !== '') {
-                $cuisineCatId = resolveCuisineCategoryId($pdo, $customCuisine);
-                if ($cuisineCatId > 0) {
-                    $stmt = $pdo->prepare("
-                        INSERT IGNORE INTO recipe_category_rcpcat (id_rcp_rcpcat, id_cat_rcpcat)
-                        VALUES (?, ?)
-                    ");
-                    $stmt->execute([$recipe_id, $cuisineCatId]);
-                }
-            }
-
-            $photoPath = saveRecipePhotoUpload($photoFile ?? [], $recipe_id);
-            if ($photoPath !== null) {
-                $stmt = $pdo->prepare("INSERT INTO recipe_image_img (id_rcp_img, image_path_img) VALUES (?, ?)");
-                $stmt->execute([$recipe_id, $photoPath]);
+            if ($customCuisineCatId > 0) {
+                $stmt = $pdo->prepare("
+                    INSERT IGNORE INTO recipe_category_rcpcat (id_rcp_rcpcat, id_cat_rcpcat)
+                    VALUES (?, ?)
+                ");
+                $stmt->execute([$recipe_id, $customCuisineCatId]);
             }
 
             $pdo->commit();
+
+            try {
+                $photoPath = saveRecipePhotoUpload($photoFile ?? [], $recipe_id);
+                if ($photoPath !== null) {
+                    $stmt = $pdo->prepare("INSERT INTO recipe_image_img (id_rcp_img, image_path_img) VALUES (?, ?)");
+                    $stmt->execute([$recipe_id, $photoPath]);
+                }
+            } catch (Throwable $photoError) {
+                queueRecipeFlash('Recipe was created, but the photo could not be saved.', 'error');
+            }
+
             header("Location: recipe.php?id=" . $recipe_id);
             exit();
         } catch (Exception $e) {

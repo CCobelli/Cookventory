@@ -4,8 +4,46 @@ require_once '../private/db-connect.php';
 require_once '../private/app-helpers.php';
 
 $recipePlaceholderImage = 'assets/images/noimg.png';
-
 $userId = (int)$_SESSION['user_id'];
+$flash = null;
+
+if (isset($_SESSION['my_recipes_flash']) && is_array($_SESSION['my_recipes_flash'])) {
+    $flash = $_SESSION['my_recipes_flash'];
+    unset($_SESSION['my_recipes_flash']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_recipe'])) {
+    $recipeId = isset($_POST['recipe_id']) && ctype_digit((string)$_POST['recipe_id'])
+        ? (int)$_POST['recipe_id']
+        : 0;
+
+    if ($recipeId <= 0) {
+        $_SESSION['my_recipes_flash'] = [
+            'type' => 'error',
+            'message' => 'Invalid recipe selected for deletion.',
+        ];
+    } else {
+        $stmt = $pdo->prepare("
+            UPDATE recipe_rcp
+            SET is_active_rcp = 0
+            WHERE id_rcp = ? AND id_usr_rcp = ? AND is_active_rcp = 1
+        ");
+        $stmt->execute([$recipeId, $userId]);
+
+        $_SESSION['my_recipes_flash'] = $stmt->rowCount() > 0
+            ? [
+                'type' => 'success',
+                'message' => 'Recipe deleted.',
+            ]
+            : [
+                'type' => 'error',
+                'message' => 'Could not delete that recipe.',
+            ];
+    }
+
+    header('Location: my_recipes.php');
+    exit();
+}
 
 $stmt = $pdo->prepare("
     SELECT
@@ -45,6 +83,12 @@ $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p class="cv-page-subtitle">These are the recipes you have created in Cookventory.</p>
   </header>
 
+  <?php if ($flash): ?>
+    <div class="cv-alert <?php echo ($flash['type'] ?? 'success') === 'error' ? 'cv-alert--error' : 'cv-alert--success'; ?>">
+      <p><?php echo h((string)($flash['message'] ?? '')); ?></p>
+    </div>
+  <?php endif; ?>
+
   <?php if (!$recipes): ?>
     <article class="cv-card cv-panel saved-recipes-empty">
       <p class="cv-empty-text">You have not created any recipes yet.</p>
@@ -82,6 +126,10 @@ $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <div class="recipe-card-actions">
             <a href="recipe.php?id=<?php echo (int)$r['id_rcp']; ?>" class="recipe-card-link">View recipe &rarr;</a>
             <a href="edit_recipe.php?id=<?php echo (int)$r['id_rcp']; ?>" class="recipe-card-link">Edit recipe &rarr;</a>
+            <form method="POST" action="my_recipes.php" class="cv-inline-form" onsubmit="return confirm('Delete this recipe?');">
+              <input type="hidden" name="recipe_id" value="<?php echo (int)$r['id_rcp']; ?>">
+              <button type="submit" name="delete_recipe" value="1">Delete recipe</button>
+            </form>
           </div>
         </article>
       <?php endforeach; ?>

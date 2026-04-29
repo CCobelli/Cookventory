@@ -1513,9 +1513,17 @@ hr {
   margin-bottom: 16px;
 }
 
+.recipe-top-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
 .recipe-back-link {
   display: inline-block;
-  margin-bottom: 10px;
   padding: 8px 14px;
   border-radius: 999px;
   background: rgba(255, 249, 238, 0.88);
@@ -1532,8 +1540,29 @@ hr {
   margin: 14px 0 18px;
 }
 
+.recipe-action-block--footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 18px;
+}
+
+.recipe-top-admin-form,
+.recipe-section-actions {
+  margin: 0;
+}
+
 .recipe-action-form + .recipe-action-form {
   margin-top: 10px;
+}
+
+.recipe-action-block--footer .recipe-action-form + .recipe-action-form {
+  margin-top: 0;
+}
+
+.recipe-action-row--cook {
+  justify-content: flex-end;
 }
 
 .recipe-action-row {
@@ -1583,6 +1612,10 @@ hr {
   margin: 18px 0;
 }
 
+.recipe-section-actions {
+  margin-top: 18px;
+}
+
 .recipe-section.cv-card,
 .recipe-action-block.cv-card {
   overflow: hidden;
@@ -1608,6 +1641,18 @@ hr {
 }
 
 @media (max-width: 760px) {
+  .recipe-action-block--footer {
+    display: block;
+  }
+
+  .recipe-top-actions {
+    align-items: stretch;
+  }
+
+  .recipe-top-actions > * {
+    width: 100%;
+  }
+
   .recipe-adjust-row {
     grid-template-columns: 1fr;
   }

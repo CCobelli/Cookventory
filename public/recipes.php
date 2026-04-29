@@ -373,10 +373,6 @@ $courseSummaryLabel = buildFilterSummaryLabel($selectedCourseNames, 'All courses
           <div class="recipe-card-actions">
             <a href="recipe.php?id=<?php echo (int)$r['id_rcp']; ?>" class="recipe-card-link">View recipe &rarr;</a>
 
-            <?php if ($isOwner): ?>
-              <a href="edit_recipe.php?id=<?php echo (int)$r['id_rcp']; ?>" class="recipe-card-link">Edit recipe &rarr;</a>
-            <?php endif; ?>
-
             <?php if ($isLoggedIn): ?>
               <form method="POST" action="recipes.php?<?php echo h(http_build_query($_GET)); ?>" class="cv-inline-form">
                 <input type="hidden" name="recipe_id" value="<?php echo (int)$r['id_rcp']; ?>">

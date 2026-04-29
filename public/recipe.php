@@ -411,7 +411,17 @@ if (isset($_SESSION['user_id'])) {
 <body>
 <?php include 'includes/navbar.php'; ?>
 <main class="cv-page cv-page--narrow recipe-page">
-  <a href="recipes.php" class="recipe-back-link">&larr; Back to recipes</a>
+  <div class="recipe-top-actions">
+    <a href="recipes.php" class="recipe-back-link">&larr; Back to recipes</a>
+    <?php if ($canAdminDeleteRecipe): ?>
+      <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-top-admin-form" onsubmit="return confirm('Remove this recipe from Cookventory?');">
+        <?php if ($activeServings): ?>
+          <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
+        <?php endif; ?>
+        <button type="submit" name="admin_delete_recipe" value="1">Admin Remove Recipe</button>
+      </form>
+    <?php endif; ?>
+  </div>
   <header class="cv-page-header recipe-header-card cv-card cv-panel">
     <div class="recipe-header-top">
       <div>
@@ -483,70 +493,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
   <?php endif; ?>
 
-  <?php if (isset($_SESSION['user_id'])): ?>
-    <div class="recipe-action-block cv-card cv-panel">
-      <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form recipe-save-form">
-        <?php if ($activeServings): ?>
-          <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
-        <?php endif; ?>
-        <?php if ($isRecipeSaved): ?>
-          <button type="submit" name="unsave_recipe" value="1" class="recipe-save-button recipe-save-button--saved">Saved</button>
-        <?php else: ?>
-          <button type="submit" name="save_recipe" value="1" class="recipe-save-button">Save recipe</button>
-        <?php endif; ?>
-      </form>
-
-      <?php if ($isOwner): ?>
-        <div class="recipe-action-form recipe-edit-link-wrap">
-          <a href="edit_recipe.php?id=<?php echo (int)$recipe_id; ?>" class="cv-button">Edit Recipe</a>
-        </div>
-      <?php endif; ?>
-
-      <?php if ($canAdminDeleteRecipe): ?>
-        <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form" onsubmit="return confirm('Remove this recipe from Cookventory?');">
-          <?php if ($activeServings): ?>
-            <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
-          <?php endif; ?>
-          <button type="submit" name="admin_delete_recipe" value="1">Admin Remove Recipe</button>
-        </form>
-      <?php endif; ?>
-
-      <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form">
-        <?php if ($activeServings): ?>
-          <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
-        <?php endif; ?>
-        <button type="submit" name="add_missing_to_shopping_list" value="1">Add to Shopping List</button>
-      </form>
-
-      <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form" onsubmit="return confirm('This will reduce pantry ingredients based on this recipe. Continue?');">
-        <?php if ($activeServings): ?>
-          <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
-        <?php endif; ?>
-        <div class="recipe-action-row">
-          <button type="submit" name="cook_recipe_and_subtract_pantry" value="1">Cook This Recipe</button>
-          <label class="recipe-toggle-label"><input type="checkbox" name="modified_recipe" id="modified_recipe" value="1"><span>Modified recipe?</span></label>
-        </div>
-
-        <div id="modified-recipe-fields" class="recipe-modified-fields is-hidden">
-          <h3>Adjust ingredients used</h3>
-          <p class="cv-muted">Set the amount you actually used for each ingredient. Leave an item at 0 to skip deducting it.</p>
-          <div class="recipe-adjust-grid">
-            <?php foreach ($ingredients as $ing): ?>
-              <?php $defaultQty = formatQty((float)$ing['quantity_rcping'] * $servingScale); ?>
-              <div class="recipe-adjust-row">
-                <label for="modified_qty_<?php echo (int)$ing['id_ing']; ?>"><?php echo h($ing['name_ing']); ?></label>
-                <input type="number" id="modified_qty_<?php echo (int)$ing['id_ing']; ?>" name="modified_qty[<?php echo (int)$ing['id_ing']; ?>]" step="0.001" min="0" value="<?php echo h($defaultQty); ?>">
-                <span><?php echo h($ing['name_uni']); ?></span>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-      </form>
-    </div>
-  <?php else: ?>
-    <p class="recipe-section"><a href="login.php">Log in</a> to add missing ingredients to your shopping list or remove ingredients from your pantry.</p>
-  <?php endif; ?>
-
   <?php if (!empty($categoriesByType)): ?>
     <section class="recipe-section cv-card cv-panel">
       <h2 class="cv-card-title">Tags</h2>
@@ -585,12 +531,73 @@ if (isset($_SESSION['user_id'])) {
         <?php endforeach; ?>
       </ul>
     <?php endif; ?>
+
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <div class="recipe-section-actions">
+        <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form">
+          <?php if ($activeServings): ?>
+            <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
+          <?php endif; ?>
+          <button type="submit" name="add_missing_to_shopping_list" value="1">Add to Shopping List</button>
+        </form>
+      </div>
+    <?php else: ?>
+      <p class="cv-help-text recipe-login-note"><a href="login.php">Log in</a> to add missing ingredients to your shopping list.</p>
+    <?php endif; ?>
   </section>
 
   <section class="recipe-section cv-card cv-panel">
     <h2 class="cv-card-title">Instructions</h2>
     <?php if (!$steps): ?><p class="cv-empty-text">No steps listed.</p><?php else: ?><ol><?php foreach ($steps as $s): ?><li><?php echo h($s['instruction_stp']); ?></li><?php endforeach; ?></ol><?php endif; ?>
+
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <div class="recipe-section-actions">
+        <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form" onsubmit="return confirm('This will reduce pantry ingredients based on this recipe. Continue?');">
+          <?php if ($activeServings): ?>
+            <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
+          <?php endif; ?>
+          <div class="recipe-action-row recipe-action-row--cook">
+            <label class="recipe-toggle-label"><input type="checkbox" name="modified_recipe" id="modified_recipe" value="1"><span>Modified recipe?</span></label>
+            <button type="submit" name="cook_recipe_and_subtract_pantry" value="1">Cook This Recipe</button>
+          </div>
+
+          <div id="modified-recipe-fields" class="recipe-modified-fields is-hidden">
+            <h3>Adjust ingredients used</h3>
+            <p class="cv-muted">Set the amount you actually used for each ingredient. Leave an item at 0 to skip deducting it.</p>
+            <div class="recipe-adjust-grid">
+              <?php foreach ($ingredients as $ing): ?>
+                <?php $defaultQty = formatQty((float)$ing['quantity_rcping'] * $servingScale); ?>
+                <div class="recipe-adjust-row">
+                  <label for="modified_qty_<?php echo (int)$ing['id_ing']; ?>"><?php echo h($ing['name_ing']); ?></label>
+                  <input type="number" id="modified_qty_<?php echo (int)$ing['id_ing']; ?>" name="modified_qty[<?php echo (int)$ing['id_ing']; ?>]" step="0.001" min="0" value="<?php echo h($defaultQty); ?>">
+                  <span><?php echo h($ing['name_uni']); ?></span>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </form>
+      </div>
+    <?php else: ?>
+      <p class="cv-help-text recipe-login-note"><a href="login.php">Log in</a> to remove ingredients from your pantry when you cook.</p>
+    <?php endif; ?>
   </section>
+
+  <?php if (isset($_SESSION['user_id'])): ?>
+    <div class="recipe-action-block recipe-action-block--footer">
+      <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form recipe-save-form">
+        <?php if ($activeServings): ?>
+          <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
+        <?php endif; ?>
+        <?php if ($isRecipeSaved): ?>
+          <button type="submit" name="unsave_recipe" value="1" class="recipe-save-button recipe-save-button--saved">Saved</button>
+        <?php else: ?>
+          <button type="submit" name="save_recipe" value="1" class="recipe-save-button">Save recipe</button>
+        <?php endif; ?>
+      </form>
+    </div>
+  <?php else: ?>
+    <p class="recipe-section"><a href="login.php">Log in</a> to save recipes.</p>
+  <?php endif; ?>
 
   <?php if ($youtube_embed): ?>
     <section class="recipe-section cv-card cv-panel">

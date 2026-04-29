@@ -273,12 +273,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_one_to_pantry']))
             SELECT
                 s.id_shli,
                 s.id_ing_shli,
+                i.name_ing,
                 s.quantity_shli,
                 s.id_uni_shli,
                 s.id_display_uni_shli,
                 u.unit_type_uni,
                 u.base_unit_uni
             FROM shopping_list_item_shli s
+            INNER JOIN ingredient_ing i ON i.id_ing = s.id_ing_shli
             INNER JOIN unit_uni u ON u.id_uni = s.id_uni_shli
             WHERE s.id_shli = ? AND s.id_usr_shli = ?
             LIMIT 1
@@ -305,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_one_to_pantry']))
                 setShoppingListFlash('Quantity to add must be greater than 0.', 'error');
             } else {
                 $qtyToAddDisplay = (float)$qtyToAddRaw;
-                $qtyToSubtractStored = convertDisplayQtyToStoredBase($qtyToAddDisplay, $displayUnit);
+                $displayQty = (float)convertFromStoredBaseToDisplayQty((float)$item['quantity_shli'], $displayUnit);
 
                 try {
                     $pdo->beginTransaction();
@@ -431,8 +433,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_add_to_pantry'])
                         if ($qtyToAddDisplay <= 0) {
                             throw new RuntimeException('One of the bulk quantities must be greater than 0.');
                         }
-
-                        $qtyToSubtractStored = convertDisplayQtyToStoredBase($qtyToAddDisplay, $displayUnit);
 
                         addOrMergePantryItem(
                             $pdo,

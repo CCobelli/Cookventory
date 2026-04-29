@@ -96,7 +96,10 @@ function addOrMergeShoppingListItem(PDO $pdo, int $userId, int $ingredientId, fl
     $baseUnitName = $unit['base_unit_uni'] ?? null;
     $conversion = isset($unit['conversion_to_base_uni']) ? (float)$unit['conversion_to_base_uni'] : null;
 
-    $pdo->beginTransaction();
+    $startedTransaction = !$pdo->inTransaction();
+    if ($startedTransaction) {
+        $pdo->beginTransaction();
+    }
 
     try {
         if ($unitType && $baseUnitName && $conversion !== null && $conversion > 0) {
@@ -156,7 +159,9 @@ function addOrMergeShoppingListItem(PDO $pdo, int $userId, int $ingredientId, fl
                 $stmt->execute([$userId, $ingredientId, $totalBaseQty, (int)$baseUnit['id_uni'], $unitId]);
             }
 
-            $pdo->commit();
+            if ($startedTransaction) {
+                $pdo->commit();
+            }
             return;
         }
 
@@ -203,9 +208,11 @@ function addOrMergeShoppingListItem(PDO $pdo, int $userId, int $ingredientId, fl
             $stmt->execute([$userId, $ingredientId, $qty, $unitId, $unitId]);
         }
 
-        $pdo->commit();
+        if ($startedTransaction) {
+            $pdo->commit();
+        }
     } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
+        if ($startedTransaction && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
         throw $e;
@@ -222,7 +229,10 @@ function addOrMergePantryItem(PDO $pdo, int $userId, int $ingredientId, float $q
     $baseUnitName = $unit['base_unit_uni'] ?? null;
     $conversion = isset($unit['conversion_to_base_uni']) ? (float)$unit['conversion_to_base_uni'] : null;
 
-    $pdo->beginTransaction();
+    $startedTransaction = !$pdo->inTransaction();
+    if ($startedTransaction) {
+        $pdo->beginTransaction();
+    }
 
     try {
         if ($unitType && $baseUnitName && $conversion !== null && $conversion > 0) {
@@ -297,7 +307,9 @@ function addOrMergePantryItem(PDO $pdo, int $userId, int $ingredientId, float $q
                 $stmt->execute([$userId, $ingredientId, $totalBaseQty, (int)$baseUnit['id_uni']]);
             }
 
-            $pdo->commit();
+            if ($startedTransaction) {
+                $pdo->commit();
+            }
             return 'Pantry item added and normalized.';
         }
 
@@ -344,10 +356,12 @@ function addOrMergePantryItem(PDO $pdo, int $userId, int $ingredientId, float $q
             $stmt->execute([$userId, $ingredientId, $qty, $unitId]);
         }
 
-        $pdo->commit();
+        if ($startedTransaction) {
+            $pdo->commit();
+        }
         return 'Pantry item added.';
     } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
+        if ($startedTransaction && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
         throw $e;
