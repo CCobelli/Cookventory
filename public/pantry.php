@@ -587,8 +587,6 @@ foreach ($rawPantry as $row) {
 
       <button type="submit" name="add_pantry">Add</button>
     </form>
-
-    <p class="pantry-unit-note cv-help-text">Compatible units are normalized behind the scenes, but you can choose how they are displayed in your pantry.</p>
   </section>
 
   <section class="pantry-list-section cv-stack-md">
