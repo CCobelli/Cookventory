@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../private/db-connect.php';
 require_once '../private/app-helpers.php';
@@ -436,8 +436,8 @@ foreach ($weeklyCategories as $category) {
     $weeklySections[] = [
         'title' => $category['name_cat'],
         'description' => $isCuisine
-            ? 'A weekly featured cuisine pulled from your recipe collection.'
-            : 'A weekly featured protein pulled from your recipe collection.',
+            ? 'A weekly featured cuisine pulled from our recipe collection.'
+            : 'A weekly featured protein pulled from our recipe collection.',
         'recipes' => $sectionRecipes,
         'empty' => 'No recipes have been added for this category yet.',
         'href' => $isCuisine

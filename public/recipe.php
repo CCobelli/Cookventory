@@ -466,22 +466,6 @@ if (isset($_SESSION['user_id'])) {
       <p class="cv-help-text">Log in to rate this recipe.</p>
     <?php endif; ?>
 
-    <?php if ($baseServings): ?>
-      <form method="GET" action="recipe.php" class="recipe-serving-form">
-        <input type="hidden" name="id" value="<?php echo (int)$recipe_id; ?>">
-        <div class="cv-field recipe-serving-field">
-          <label for="recipe_servings_target">Adjust servings</label>
-          <input id="recipe_servings_target" type="number" name="servings" min="1" step="1" value="<?php echo (int)$activeServings; ?>">
-        </div>
-        <button type="submit">Update amounts</button>
-        <?php if ($activeServings !== null && $activeServings !== $baseServings): ?>
-          <a class="cv-button recipe-serving-reset" href="recipe.php?id=<?php echo (int)$recipe_id; ?>">Reset to <?php echo (int)$baseServings; ?></a>
-        <?php endif; ?>
-      </form>
-      <p class="recipe-serving-copy cv-muted">Ingredient amounts below are scaled from <?php echo (int)$baseServings; ?> servings to <?php echo (int)$activeServings; ?>.</p>
-    <?php else: ?>
-      <p class="recipe-serving-copy cv-muted">This recipe does not have a saved serving size yet, so ingredient scaling is unavailable for it.</p>
-    <?php endif; ?>
   </header>
 
   <?php if ($flash): ?>
@@ -492,28 +476,6 @@ if (isset($_SESSION['user_id'])) {
       <?php endif; ?>
     </div>
   <?php endif; ?>
-
-  <?php if (!empty($categoriesByType)): ?>
-    <section class="recipe-section cv-card cv-panel">
-      <h2 class="cv-card-title">Tags</h2>
-      <?php foreach ($categoriesByType as $type => $cats): ?>
-        <p><strong><?php echo h(ucfirst($type)); ?>:</strong> <?php echo h(implode(', ', $cats)); ?></p>
-      <?php endforeach; ?>
-    </section>
-  <?php endif; ?>
-
-  <section class="recipe-section cv-card cv-panel">
-    <h2 class="cv-card-title">Images</h2>
-    <div class="recipe-media-grid">
-      <?php if ($images): ?>
-        <?php foreach ($images as $img): ?>
-          <img src="<?php echo h($img['image_path_img']); ?>" alt="Recipe image" class="recipe-media-image">
-        <?php endforeach; ?>
-      <?php else: ?>
-        <img src="<?php echo h($recipePlaceholderImage); ?>" alt="No image available" class="recipe-media-image">
-      <?php endif; ?>
-    </div>
-  </section>
 
   <section class="recipe-section cv-card cv-panel">
     <div class="recipe-section-header">
@@ -532,18 +494,38 @@ if (isset($_SESSION['user_id'])) {
       </ul>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['user_id'])): ?>
-      <div class="recipe-section-actions">
+    <div class="recipe-section-actions recipe-section-actions--split">
+      <div class="recipe-section-actions-main">
+        <div class="recipe-serving-tools">
+          <?php if ($baseServings): ?>
+            <form method="GET" action="recipe.php" class="recipe-serving-form">
+              <input type="hidden" name="id" value="<?php echo (int)$recipe_id; ?>">
+              <div class="cv-field recipe-serving-field">
+                <label for="recipe_servings_target">Adjust servings</label>
+                <input id="recipe_servings_target" type="number" name="servings" min="1" step="1" value="<?php echo (int)$activeServings; ?>">
+              </div>
+              <button type="submit">Update amounts</button>
+              <?php if ($activeServings !== null && $activeServings !== $baseServings): ?>
+                <a class="cv-button recipe-serving-reset" href="recipe.php?id=<?php echo (int)$recipe_id; ?>">Reset to <?php echo (int)$baseServings; ?></a>
+              <?php endif; ?>
+            </form>
+          <?php else: ?>
+            <p class="recipe-serving-copy cv-muted">This recipe does not have a saved serving size yet, so ingredient scaling is unavailable for it.</p>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      <?php if (isset($_SESSION['user_id'])): ?>
         <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form">
           <?php if ($activeServings): ?>
             <input type="hidden" name="servings_target" value="<?php echo (int)$activeServings; ?>">
           <?php endif; ?>
           <button type="submit" name="add_missing_to_shopping_list" value="1">Add to Shopping List</button>
         </form>
-      </div>
-    <?php else: ?>
-      <p class="cv-help-text recipe-login-note"><a href="login.php">Log in</a> to add missing ingredients to your shopping list.</p>
-    <?php endif; ?>
+      <?php else: ?>
+        <p class="cv-help-text recipe-login-note"><a href="login.php">Log in</a> to add missing ingredients to your shopping list.</p>
+      <?php endif; ?>
+    </div>
   </section>
 
   <section class="recipe-section cv-card cv-panel">
@@ -582,6 +564,26 @@ if (isset($_SESSION['user_id'])) {
     <?php endif; ?>
   </section>
 
+  <section class="recipe-section cv-card cv-panel recipe-media-section">
+    <h2 class="cv-card-title">Images</h2>
+    <div class="recipe-media-grid recipe-media-grid--compact">
+      <?php if ($images): ?>
+        <?php foreach ($images as $img): ?>
+          <img src="<?php echo h($img['image_path_img']); ?>" alt="Recipe image" class="recipe-media-image recipe-media-image--compact">
+        <?php endforeach; ?>
+      <?php else: ?>
+        <img src="<?php echo h($recipePlaceholderImage); ?>" alt="No image available" class="recipe-media-image recipe-media-image--compact">
+      <?php endif; ?>
+    </div>
+  </section>
+
+  <?php if ($youtube_embed): ?>
+    <section class="recipe-section cv-card cv-panel">
+      <h2 class="cv-card-title">Video</h2>
+      <iframe class="recipe-video" src="<?php echo h($youtube_embed); ?>" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </section>
+  <?php endif; ?>
+
   <?php if (isset($_SESSION['user_id'])): ?>
     <div class="recipe-action-block recipe-action-block--footer">
       <form method="POST" action="recipe.php?id=<?php echo (int)$recipe_id; ?><?php echo $activeServings ? '&servings=' . (int)$activeServings : ''; ?>" class="recipe-action-form recipe-save-form">
@@ -597,13 +599,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
   <?php else: ?>
     <p class="recipe-section"><a href="login.php">Log in</a> to save recipes.</p>
-  <?php endif; ?>
-
-  <?php if ($youtube_embed): ?>
-    <section class="recipe-section cv-card cv-panel">
-      <h2 class="cv-card-title">Video</h2>
-      <iframe class="recipe-video" src="<?php echo h($youtube_embed); ?>" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </section>
   <?php endif; ?>
 </main>
 <script src="assets/JS/script.js?v=20260311b"></script>
